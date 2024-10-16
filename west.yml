@@ -16,6 +16,8 @@ manifest:
   # "remotes" is a list of locations where git repositories are cloned
   # and fetched from.
   remotes:
+    - name: td
+      url-base: https://github.com/Transmission-Dynamics
     # nRF Connect SDK GitHub organization.
     # NCS repositories are hosted here.
     - name: ncs
@@ -60,7 +62,7 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/introduction/index.html
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
-      remote: https://github.com/Transmission-Dynamics
+      remote: td
       repo-path: sdk-zephyr
       revision: td_fork
       import:
