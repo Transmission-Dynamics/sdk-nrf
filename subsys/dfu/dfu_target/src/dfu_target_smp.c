@@ -309,6 +309,22 @@ int dfu_target_smp_image_list_get(struct mcumgr_image_state *res_buf)
 	return err;
 }
 
+int dfu_target_smp_mcuboot_image_get(struct mcumgr_mcuboot_image_state *res_buf)
+{
+	int err = 0;
+
+	err = dfu_target_smp_enable();
+	if (err) {
+		return err;
+	}
+	err = img_mgmt_client_mcuboot_image_read(&img_gr_client, res_buf);
+	if (err) {
+		LOG_ERR("MCUBoot image state response command fail, err:%d", res_buf->status);
+	}
+
+	return err;
+}
+
 static int dfu_target_smp_recovery_enable(void)
 {
 	int rc;
