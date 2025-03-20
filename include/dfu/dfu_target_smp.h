@@ -59,6 +59,15 @@ int dfu_target_smp_client_init(void);
 int dfu_target_smp_image_list_get(struct mcumgr_image_state *res_buf);
 
 /**
+ * @brief Read MCUboot image state.
+ *
+ * @param res_buf MCUboot image state buffer.
+ *
+ * @return 0 on success, negative errno otherwise.
+ */
+int dfu_target_smp_mcuboot_image_get(struct mcumgr_mcuboot_image_state *res_buf);
+
+/**
  * @brief Reboot SMP target device, and apply new image.
  *
  * @return 0 on success, negative errno otherwise.
