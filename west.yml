@@ -67,7 +67,7 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr
-      revision: td_fork_12bf7019a84
+      revision: td_fork_8f60196f088
       remote: td
       import:
         # In addition to the zephyr repository itself, NCS also
@@ -133,7 +133,7 @@ manifest:
           compare-by-default: true
     - name: mcuboot
       repo-path: sdk-mcuboot
-      revision: td_fork_53a0df34
+      revision: td_fork_fda2623f
       remote: td
       path: bootloader/mcuboot
     - name: qcbor
