@@ -109,6 +109,7 @@ struct lpuart_data {
 struct lpuart_config {
 	nrfx_gpiote_pin_t req_pin;
 	nrfx_gpiote_pin_t rdy_pin;
+	const struct device *uart_dev;
 };
 
 static void req_pin_handler(nrfx_gpiote_pin_t pin,
@@ -1021,7 +1022,7 @@ static int lpuart_init(const struct device *dev)
 	const struct lpuart_config *cfg = get_dev_config(dev);
 	int err;
 
-	data->uart = DEVICE_DT_GET(DT_INST_BUS(0));
+	data->uart = cfg->uart_dev;
 	if (!device_is_ready(data->uart)) {
 		return -ENODEV;
 	}
@@ -1116,17 +1117,16 @@ static int api_config_get(const struct device *dev, struct uart_config *cfg)
 }
 #endif /* CONFIG_UART_USE_RUNTIME_CONFIGURE */
 
-#define LPUART_PIN_CFG_INITIALIZER(pin_prop) \
+
+#define REQ_PIN(idx) DT_INST_PROP(idx, req_pin)
+#define RDY_PIN(idx) DT_INST_PROP(idx, rdy_pin)
+
+#define LPUART_CONFIG(idx) \
 	{ \
-		.pin = DT_INST_PROP(0, pin_prop) \
+		.req_pin = REQ_PIN(idx), \
+		.rdy_pin = RDY_PIN(idx), \
+		.uart_dev = DEVICE_DT_GET(DT_PARENT(DT_DRV_INST(idx))), \
 	}
-
-static const struct lpuart_config lpuart_config = {
-	.req_pin = DT_INST_PROP(0, req_pin),
-	.rdy_pin = DT_INST_PROP(0, rdy_pin)
-};
-
-static struct lpuart_data lpuart_data;
 
 static const struct uart_driver_api lpuart_api = {
 	.callback_set = api_callback_set,
@@ -1159,29 +1159,34 @@ static const struct uart_driver_api lpuart_api = {
 #endif
 };
 
-#define GPIO_HAS_PIN(gpio_node, pin_prop)				  \
-	(DT_PROP(gpio_node, port) == (DT_INST_PROP(0, pin_prop) >> 5))
+#define GPIO_HAS_PIN(gpio_node, pin) \
+	(DT_PROP(gpio_node, port) == (pin >> 5))
 
 /* There may be GPIO ports which cannot be used with GPIOTE. Check if pins are
  * not from those ports.
  */
-#define CHECK_GPIOTE_AVAILABLE(gpio_node) \
-	BUILD_ASSERT((!GPIO_HAS_PIN(gpio_node, req_pin) &&		  \
-		      !GPIO_HAS_PIN(gpio_node, rdy_pin)) ||		  \
+#define CHECK_GPIOTE_AVAILABLE(gpio_node, idx) \
+	BUILD_ASSERT((!GPIO_HAS_PIN(gpio_node, REQ_PIN(idx)) &&		  \
+		      !GPIO_HAS_PIN(gpio_node, RDY_PIN(idx))) ||		  \
 		     DT_NODE_HAS_PROP(gpio_node, gpiote_instance));
 
-#define CHECK_GPIOTE_IRQ_PRIORITY(gpio_node)				  \
+#define CHECK_GPIOTE_IRQ_PRIORITY(gpio_node, idx)				  \
 	IF_ENABLED(DT_NODE_HAS_PROP(gpio_node, gpiote_instance), (	  \
-	BUILD_ASSERT((!GPIO_HAS_PIN(gpio_node, req_pin) &&		  \
-		      !GPIO_HAS_PIN(gpio_node, rdy_pin)) ||		  \
-		     DT_IRQ(DT_PARENT(DT_NODELABEL(lpuart)), priority) == \
+	BUILD_ASSERT((!GPIO_HAS_PIN(gpio_node, REQ_PIN(idx)) &&		  \
+		      !GPIO_HAS_PIN(gpio_node, RDY_PIN(idx))) ||		  \
+		     DT_IRQ(DT_PARENT(DT_DRV_INST(idx)), priority) == \
 		     DT_IRQ(GPIOTE_NODE(gpio_node), priority),		  \
 		     "UARTE and GPIOTE interrupt priority must match.");))
 
-DT_FOREACH_STATUS_OKAY(nordic_nrf_gpio, CHECK_GPIOTE_IRQ_PRIORITY)
-DT_FOREACH_STATUS_OKAY(nordic_nrf_gpio, CHECK_GPIOTE_AVAILABLE)
+#define INIT_LPUART(idx) \
+	static struct lpuart_data lpuart_##idx##_data; \
+	static const struct lpuart_config lpuart_##idx##_config = LPUART_CONFIG(idx); \
+	DT_FOREACH_STATUS_OKAY_VARGS(nordic_nrf_gpio, CHECK_GPIOTE_AVAILABLE, idx) \
+	DT_FOREACH_STATUS_OKAY_VARGS(nordic_nrf_gpio, CHECK_GPIOTE_IRQ_PRIORITY, idx) \
+	DEVICE_DT_INST_DEFINE(idx, lpuart_init, NULL, \
+				&lpuart_##idx##_data, &lpuart_##idx##_config, \
+				POST_KERNEL, CONFIG_NRF_SW_LPUART_INIT_PRIORITY, \
+				&lpuart_api);
 
-DEVICE_DT_DEFINE(DT_NODELABEL(lpuart), lpuart_init, NULL,
-	      &lpuart_data, &lpuart_config,
-	      POST_KERNEL, CONFIG_NRF_SW_LPUART_INIT_PRIORITY,
-	      &lpuart_api);
+
+DT_INST_FOREACH_STATUS_OKAY(INIT_LPUART)
