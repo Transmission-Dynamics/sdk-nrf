@@ -137,7 +137,7 @@ static void async(const struct device *lpuart)
 	err = uart_rx_enable(lpuart, buf, BUF_SIZE, 10000);
 	__ASSERT(err == 0, "Failed to enable RX");
 
-	while (1) {
+	for (int i = 0; i < 5; i++) {
 		err = uart_tx(lpuart, tx_buf, sizeof(tx_buf), 10000);
 		__ASSERT(err == 0, "Failed to initiate transmission");
 
@@ -146,18 +146,25 @@ static void async(const struct device *lpuart)
 		uart_poll_out(lpuart, tx_buf[0]);
 		k_sleep(K_MSEC(100));
 	}
+
+	uart_rx_disable(lpuart);
 }
 
 int main(void)
 {
 	const struct device *lpuart = DEVICE_DT_GET(DT_NODELABEL(lpuart));
+	const struct device *lpuart_extra = DEVICE_DT_GET(DT_NODELABEL(lpuart_extra));
 
 	__ASSERT(device_is_ready(lpuart), "LPUART device not ready");
+	__ASSERT(device_is_ready(lpuart_extra), "LPUART extra device not ready");
 
 	if (IS_ENABLED(CONFIG_NRF_SW_LPUART_INT_DRIVEN)) {
-		interrupt_driven(lpuart);
+		// interrupt_driven(lpuart);
+		interrupt_driven(lpuart_extra);
 	} else {
 		async(lpuart);
+		k_sleep(K_SECONDS(5));
+		async(lpuart_extra);
 	}
 
 	return 0;
