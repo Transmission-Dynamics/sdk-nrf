@@ -1140,13 +1140,6 @@ static int api_config_get(const struct device *dev, struct uart_config *cfg)
 		.uart_dev = DEVICE_DT_GET(DT_PARENT(DT_DRV_INST(idx))), \
 	}
 
-static const struct lpuart_config lpuart_config = {
-	.req_pin = DT_INST_PROP(0, req_pin),
-	.rdy_pin = DT_INST_PROP(0, rdy_pin)
-};
-
-static struct lpuart_data lpuart_data;
-
 static const struct uart_driver_api lpuart_api = {
 	.callback_set = api_callback_set,
 	.tx = api_tx,
