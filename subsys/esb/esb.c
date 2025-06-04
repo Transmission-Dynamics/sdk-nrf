@@ -1171,7 +1171,7 @@ static void start_tx_transaction(void)
 
 		pdu->type.dpl_pdu.length = current_payload->length;
 		pdu->type.dpl_pdu.pid = current_payload->pid;
-		pdu->type.dpl_pdu.no_ack = current_payload->noack;
+		pdu->type.dpl_pdu.no_ack = current_payload->noack ? 0x00 : 0x01;
 
 		memcpy(pdu->data, current_payload->data, current_payload->length);
 
@@ -1978,6 +1978,8 @@ int esb_suspend(void)
 
 void esb_disable(void)
 {
+    on_radio_disabled = NULL;
+    esb_irq_disable();
 	esb_ppi_disable_all();
 	esb_fem_reset();
 
@@ -1995,8 +1997,6 @@ void esb_disable(void)
 
 	memset(rx_pipe_info, 0, sizeof(rx_pipe_info));
 	memset(pids, 0, sizeof(pids));
-
-	esb_irq_disable();
 }
 
 bool esb_is_idle(void)
