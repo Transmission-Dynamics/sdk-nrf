@@ -1171,7 +1171,7 @@ static void start_tx_transaction(void)
 
 		pdu->type.dpl_pdu.length = current_payload->length;
 		pdu->type.dpl_pdu.pid = current_payload->pid;
-		pdu->type.dpl_pdu.no_ack = current_payload->noack ? 0x00 : 0x01;
+		pdu->type.dpl_pdu.no_ack = current_payload->noack;
 
 		memcpy(pdu->data, current_payload->data, current_payload->length);
 
