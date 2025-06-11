@@ -230,7 +230,7 @@ struct esb_address {
 	uint8_t num_pipes;		/* Number of pipes available. */
 	uint8_t addr_length;	/* Length of the address plus the prefix. */
 	uint8_t rx_pipes_enabled;	/* Bitfield for enabled pipes. */
-	uint8_t rf_channel;        /* Channel to use (between 0 and 100). */
+	uint8_t rf_channel;        /* Channel to use (between 0 and 125). */
 	atomic_t rf_channel_flags;	/* Flags for setting the channel. */
 };
 
@@ -967,6 +967,8 @@ static bool update_radio_crc(void)
 	return true;
 }
 
+static void update_radio_ramp_up_mode();
+
 static bool update_radio_parameters(void)
 {
 	bool params_valid = true;
@@ -974,11 +976,18 @@ static bool update_radio_parameters(void)
 	params_valid &= update_radio_bitrate();
 	params_valid &= update_radio_protocol();
 	params_valid &= update_radio_crc();
+    update_radio_ramp_up_mode();
 	update_rf_payload_format(esb_cfg.payload_length);
 	params_valid &=
 	    (esb_cfg.retransmit_delay >= RETRANSMIT_DELAY_MIN);
 
 	return params_valid;
+}
+
+static void update_radio_ramp_up_mode()
+{
+    NRF_RADIO->MODECNF0 = RADIO_MODECNF0_DTX_Center << RADIO_MODECNF0_DTX_Pos |
+                          RADIO_MODECNF0_RU_Fast << RADIO_MODECNF0_RU_Pos;
 }
 
 static void reset_fifos(void)
@@ -1073,7 +1082,7 @@ static bool rx_fifo_push_rfbuf(uint8_t pipe, uint8_t pid)
 	rx_fifo.payload[rx_fifo.back]->pipe = pipe;
 	rx_fifo.payload[rx_fifo.back]->rssi = nrf_radio_rssi_sample_get(NRF_RADIO);
 	rx_fifo.payload[rx_fifo.back]->pid = pid;
-	rx_fifo.payload[rx_fifo.back]->noack = !rx_pdu->type.dpl_pdu.no_ack;
+	// rx_fifo.payload[rx_fifo.back]->noack = !rx_pdu->type.dpl_pdu.no_ack;
 
 	if (++rx_fifo.back >= CONFIG_ESB_RX_FIFO_SIZE) {
 		rx_fifo.back = 0;
@@ -2385,7 +2394,7 @@ int esb_enable_pipes(uint8_t enable_mask)
 
 int esb_set_rf_channel(uint32_t channel)
 {
-	if (channel > 100) {
+	if (channel > 125) {
 		return -EINVAL;
 	}
 
