@@ -71,7 +71,7 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr
-      revision: td_fork_034323fcd7
+      revision: 62e20a3792ee52af26f0b555313784bf0cd78be7
       remote: td
       import:
         # In addition to the zephyr repository itself, NCS also
