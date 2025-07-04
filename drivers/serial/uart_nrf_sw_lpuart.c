@@ -14,6 +14,7 @@
 #include <zephyr/logging/log.h>
 #include <zephyr/sys/onoff.h>
 #include <zephyr/drivers/clock_control/nrf_clock_control.h>
+#include <uart_nrf_sw_lpuart.h>
 
 LOG_MODULE_REGISTER(lpuart, CONFIG_NRF_SW_LPUART_LOG_LEVEL);
 
@@ -1044,7 +1045,8 @@ static int api_irq_update(const struct device *dev)
 
 #endif /* CONFIG_NRF_SW_LPUART_INT_DRIVEN */
 
-static int lpuart_init(const struct device *dev)
+
+int uart_nrf_sw_lpuart_init(const struct device *dev)
 {
 	struct lpuart_data *data = get_dev_data(dev);
 	const struct lpuart_config *cfg = get_dev_config(dev);
@@ -1149,8 +1151,8 @@ static int api_config_get(const struct device *dev, struct uart_config *cfg)
 #endif /* CONFIG_UART_USE_RUNTIME_CONFIGURE */
 
 
-#define REQ_PIN(idx) DT_INST_PROP(idx, req_pin)
-#define RDY_PIN(idx) DT_INST_PROP(idx, rdy_pin)
+#define REQ_PIN(idx)   DT_INST_PROP(idx, req_pin)
+#define RDY_PIN(idx)   DT_INST_PROP(idx, rdy_pin)
 
 #define LPUART_CONFIG(idx) \
 	{ \
@@ -1193,6 +1195,9 @@ static const struct uart_driver_api lpuart_api = {
 #define GPIO_HAS_PIN(gpio_node, pin) \
 	(DT_PROP(gpio_node, port) == (pin >> 5))
 
+#define INSTANCE_GET_INIT_FUNCTION(idx) \
+	DT_INST_PROP(idx, auto_init) ? uart_nrf_sw_lpuart_init : NULL
+
 /* There may be GPIO ports which cannot be used with GPIOTE. Check if pins are
  * not from those ports.
  */
@@ -1225,7 +1230,7 @@ BUILD_ASSERT(DT_IRQ(DT_PARENT(DT_NODELABEL(lpuart)), priority) ==
 	static const struct lpuart_config lpuart_##idx##_config = LPUART_CONFIG(idx); \
 	DT_FOREACH_STATUS_OKAY_VARGS(nordic_nrf_gpio, CHECK_GPIOTE_AVAILABLE, idx) \
 	DT_FOREACH_STATUS_OKAY_VARGS(nordic_nrf_gpio, CHECK_GPIOTE_IRQ_PRIORITY, idx) \
-	DEVICE_DT_INST_DEFINE(idx, lpuart_init, NULL, \
+	DEVICE_DT_INST_DEFINE(idx, INSTANCE_GET_INIT_FUNCTION(idx), NULL, \
 				&lpuart_##idx##_data, &lpuart_##idx##_config, \
 				POST_KERNEL, CONFIG_NRF_SW_LPUART_INIT_PRIORITY, \
 				&lpuart_api);
