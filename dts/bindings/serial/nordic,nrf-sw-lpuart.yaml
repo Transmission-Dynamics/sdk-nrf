@@ -18,3 +18,10 @@ properties:
     type: int
     description: Ready pin
     required: true
+
+  auto-init:
+    type: boolean
+    description: |
+      If true, the driver will automatically initialize the peripheral.
+      If false, the application must call the `nrf_sw_lpuart_init()` function
+      to initialize the peripheral.
