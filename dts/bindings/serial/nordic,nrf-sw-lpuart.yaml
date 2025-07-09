@@ -18,3 +18,9 @@ properties:
     type: int
     description: Ready pin
     required: true
+
+  skip-init:
+    type: boolean
+    description: |
+      If true, the driver will skip the initialization of the LPUART.
+      If false, the driver will initialize the LPUART.
