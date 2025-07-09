@@ -19,9 +19,8 @@ properties:
     description: Ready pin
     required: true
 
-  auto-init:
+  skip-init:
     type: boolean
     description: |
-      If true, the driver will automatically initialize the peripheral.
-      If false, the application must call the `nrf_sw_lpuart_init()` function
-      to initialize the peripheral.
+      If true, the driver will skip the initialization of the LPUART.
+      If false, the driver will initialize the LPUART.
