@@ -1165,7 +1165,7 @@ static const struct uart_driver_api lpuart_api = {
 	(DT_PROP(gpio_node, port) == (pin >> 5))
 
 #define INSTANCE_GET_INIT_FUNCTION(idx) \
-	DT_INST_PROP(idx, auto_init) ? uart_nrf_sw_lpuart_init : NULL
+	DT_INST_PROP(idx, skip_init) ? NULL : uart_nrf_sw_lpuart_init
 
 /* There may be GPIO ports which cannot be used with GPIOTE. Check if pins are
  * not from those ports.
