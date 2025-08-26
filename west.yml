@@ -18,6 +18,8 @@ manifest:
   remotes:
     # nRF Connect SDK GitHub organization.
     # NCS repositories are hosted here.
+    - name: td
+      url-base: https://github.com/Transmission-Dynamics
     - name: ncs
       url-base: https://github.com/nrfconnect
     # Third-party repository sources:
@@ -65,7 +67,8 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr
-      revision: ncs-v3.1.0
+      revision: td_fork_ncs_v3.1.0_bdcec426117
+      remote: td
       import:
         # In addition to the zephyr repository itself, NCS also
         # imports the contents of zephyr/west.yml at the above
@@ -131,7 +134,8 @@ manifest:
           compare-by-default: true
     - name: mcuboot
       repo-path: sdk-mcuboot
-      revision: ncs-v3.1.0
+      revision: td_fork_ncs_v3.1.0_e93595d8
+      remote: td
       path: bootloader/mcuboot
     - name: qcbor
       url: https://github.com/laurencelundblade/QCBOR
