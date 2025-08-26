@@ -18,6 +18,8 @@ manifest:
   remotes:
     # nRF Connect SDK GitHub organization.
     # NCS repositories are hosted here.
+    - name: td
+      url-base: https://github.com/Transmission-Dynamics
     - name: ncs
       url-base: https://github.com/nrfconnect
     # Third-party repository sources:

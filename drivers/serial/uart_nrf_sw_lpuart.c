@@ -1215,14 +1215,19 @@ static const struct uart_driver_api lpuart_api = {
 		     "UARTE and GPIOTE interrupt priority must match.");))
 
 #if CONFIG_NRF_SW_LPUART_INT_DRIVEN
-/* UARTE interrupt priority must be the same as system timer priority. */
 #if CONFIG_NRFX_GRTC
-BUILD_ASSERT(DT_IRQ(DT_PARENT(DT_NODELABEL(lpuart)), priority) ==
-	     DT_IRQ(DT_NODELABEL(grtc), priority));
+#define LPUART_IRQ_PRIORITY_ASSERT(idx) \
+    BUILD_ASSERT(DT_IRQ(DT_PARENT(DT_DRV_INST(idx)), priority) == \
+             DT_IRQ(DT_NODELABEL(grtc), priority), \
+             "UARTE and GRTC interrupt priority must match for LPUART instance " #idx);
 #else
-BUILD_ASSERT(DT_IRQ(DT_PARENT(DT_NODELABEL(lpuart)), priority) ==
-	     DT_IRQ(DT_NODELABEL(rtc1), priority));
+#define LPUART_IRQ_PRIORITY_ASSERT(idx) \
+    BUILD_ASSERT(DT_IRQ(DT_PARENT(DT_DRV_INST(idx)), priority) == \
+             DT_IRQ(DT_NODELABEL(rtc1), priority), \
+             "UARTE and RTC1 interrupt priority must match for LPUART instance " #idx);
 #endif
+#else
+#define LPUART_IRQ_PRIORITY_ASSERT(idx)
 #endif
 
 #define INIT_LPUART(idx) \
@@ -1233,7 +1238,7 @@ BUILD_ASSERT(DT_IRQ(DT_PARENT(DT_NODELABEL(lpuart)), priority) ==
 	DEVICE_DT_INST_DEFINE(idx, INSTANCE_GET_INIT_FUNCTION(idx), NULL, \
 				&lpuart_##idx##_data, &lpuart_##idx##_config, \
 				POST_KERNEL, CONFIG_NRF_SW_LPUART_INIT_PRIORITY, \
-				&lpuart_api);
-
+				&lpuart_api); \
+    LPUART_IRQ_PRIORITY_ASSERT(idx)
 
 DT_INST_FOREACH_STATUS_OKAY(INIT_LPUART)
