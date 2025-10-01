@@ -1095,6 +1095,14 @@ int uart_nrf_sw_lpuart_init(const struct device *dev)
 	return err;
 }
 
+void uart_nrf_sw_lpuart_rx_buf_reset(const struct device *dev)
+{
+	struct lpuart_data *data = get_dev_data(dev);
+
+	data->rx_buf = NULL;
+	data->rx_len = 0;
+}
+
 static int api_poll_in(const struct device *dev, unsigned char *p_char)
 {
 #if CONFIG_NRF_SW_LPUART_INT_DRIVEN
