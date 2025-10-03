@@ -1095,12 +1095,95 @@ int uart_nrf_sw_lpuart_init(const struct device *dev)
 	return err;
 }
 
-void uart_nrf_sw_lpuart_rx_buf_reset(const struct device *dev)
+int uart_nrf_sw_lpuart_deinit(const struct device *dev)
 {
 	struct lpuart_data *data = get_dev_data(dev);
+	const struct lpuart_config *cfg = get_dev_config(dev);
+	int ret = 0;
 
-	data->rx_buf = NULL;
-	data->rx_len = 0;
+	k_timer_stop(&data->tx_timer);
+#if CONFIG_NRF_SW_LPUART_INT_DRIVEN
+    k_timer_stop(&data->int_driven.trampoline_timer);
+#endif
+
+    if (data->rx_state != RX_OFF) {
+        uart_rx_disable(data->uart);
+    }
+
+    if (IS_ENABLED(CONFIG_NRF_SW_LPUART_HFXO_ON_RX)) {
+	    struct onoff_manager *mgr = z_nrf_clock_control_get_onoff(CLOCK_CONTROL_NRF_SUBSYS_HF);
+
+	    ret = onoff_cancel_or_release(mgr, &data->rx_clk_cli);
+	    __ASSERT_NO_MSG(ret >= 0);
+    }
+
+    if (data->rx_buf) {
+	    atomic_ptr_set((atomic_ptr_t *)&data->rx_buf, NULL);
+    }
+
+    data->rx_len = 0U;
+    data->rx_got_data = false;
+    data->rx_state = RX_OFF;
+
+    data->tx_active = false;
+    data->tx_len = 0U;
+    data->tx_buf = NULL;
+    data->txbyte = -1;
+
+    ret = uart_callback_set(data->uart, NULL, NULL);
+	if (ret < 0) {
+		LOG_ERR("Failed to clear uart callback");
+		return ret;
+	}
+
+    data->user_callback = NULL;
+    data->user_data = NULL;
+
+#if CONFIG_NRF_SW_LPUART_INT_DRIVEN
+    data->int_driven.callback = NULL;
+    data->int_driven.user_data = NULL;
+    data->int_driven.txlen = 0U;
+    data->int_driven.rxlen = 0U;
+    data->int_driven.rxrd = 0U;
+    data->int_driven.tx_enabled = false;
+    data->int_driven.rx_enabled = false;
+    data->int_driven.err_enabled = false;
+#endif
+
+	/* Free req pin channel */
+	uint8_t ch = 0;
+	ret = nrfx_gpiote_channel_get(get_gpiote(cfg->req_pin), cfg->req_pin, &ch);
+	if (ret == NRFX_SUCCESS) {
+		ret = nrfx_gpiote_channel_free(get_gpiote(cfg->req_pin), ch);
+		if (ret != NRFX_SUCCESS) {
+			LOG_ERR("Failed to free req pin channel:%08x", ret);
+			return ret;
+		}
+	}
+
+	/* Free RDY pin channel.
+	   Assumes data->rdy_ch holds a valid channel ID.
+	   We can’t reliably check allocation via pin lookup because the driver may
+	   unbind the pin→channel mapping (e.g., in idle), so use the stored ID. */
+	ret = nrfx_gpiote_channel_free(get_gpiote(cfg->rdy_pin), data->rdy_ch);
+	if (ret != NRFX_SUCCESS) {
+		LOG_ERR("Failed to free rdy pin channel:%08x", ret);
+		return ret;
+	}
+
+	ret = nrfx_gpiote_pin_uninit(get_gpiote(cfg->rdy_pin), cfg->rdy_pin);
+	if (ret != NRFX_SUCCESS) {
+		LOG_ERR("Failed to uninit rdy pin:%08x", ret);
+		return ret;
+	}
+
+	ret = nrfx_gpiote_pin_uninit(get_gpiote(cfg->req_pin), cfg->req_pin);
+	if (ret != NRFX_SUCCESS) {
+		LOG_ERR("Failed to uninit req pin:%08x", ret);
+		return ret;
+	}
+
+	return 0;
 }
 
 static int api_poll_in(const struct device *dev, unsigned char *p_char)
