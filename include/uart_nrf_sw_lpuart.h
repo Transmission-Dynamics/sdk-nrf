@@ -5,8 +5,10 @@
 
 int uart_nrf_sw_lpuart_init(const struct device *dev);
 
-/*  Allows to reset RX buffer pointer and prepare to reinitialize lpuart.
-    Should be called only when lpuart instance is disabled */
-void uart_nrf_sw_lpuart_rx_buf_reset(const struct device *dev);
+/* Resets internal state and hardware configuration, preparing LPUART for
+   reinitialization. Requires a prior successful uart_nrf_sw_lpuart_init(),
+   as this routine relies on initialized driver context. Call only after the
+   LPUART instance has been disabled. */
+int uart_nrf_sw_lpuart_deinit(const struct device *dev);
 
 #endif // UART_NRF_SW_LPUART_H_
