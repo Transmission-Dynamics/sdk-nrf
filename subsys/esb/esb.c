@@ -270,6 +270,7 @@ static const struct mbox_dt_spec off_channel =
 #endif /* ERRATA_216_PRESENT */
 
 static esb_event_handler event_handler;
+static void * event_param;
 static struct esb_payload *current_payload;
 
 /* FIFOs and buffers */
@@ -1727,15 +1728,15 @@ static void esb_evt_irq_handler(void)
 	if (event_handler != NULL) {
 		if (interrupts & INT_TX_SUCCESS_MSK) {
 			event.evt_id = ESB_EVENT_TX_SUCCESS;
-			event_handler(&event);
+			event_handler(&event, event_param);
 		}
 		if (interrupts & INT_TX_FAILED_MSK) {
 			event.evt_id = ESB_EVENT_TX_FAILED;
-			event_handler(&event);
+			event_handler(&event, event_param);
 		}
 		if (interrupts & INT_RX_DATA_RECEIVED_MSK) {
 			event.evt_id = ESB_EVENT_RX_RECEIVED;
-			event_handler(&event);
+			event_handler(&event, event_param);
 		}
 	}
 }
@@ -1819,6 +1820,7 @@ int esb_init(const struct esb_config *config)
 	}
 
 	event_handler = config->event_handler;
+	event_param = config->event_param;
 
 	memcpy(&esb_cfg, config, sizeof(esb_cfg));
 

@@ -312,7 +312,7 @@ struct esb_evt {
 };
 
 /** @brief Event handler prototype. */
-typedef void (*esb_event_handler)(const struct esb_evt *event);
+typedef void (*esb_event_handler)(const struct esb_evt *event, void * param);
 
 /** @brief Main configuration structure for the module. */
 struct esb_config {
@@ -320,6 +320,7 @@ struct esb_config {
 	enum esb_mode mode;			/**< Mode. */
 	esb_event_handler event_handler;	/**< Event handler. */
 	/* General RF parameters */
+	void * event_param;		/**< Event handler parameter. */
 	enum esb_bitrate bitrate;		/**< Bitrate mode. */
 	enum esb_crc crc;			/**< CRC mode. */
 	int8_t tx_output_power;			/**< Radio TX power.
