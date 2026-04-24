@@ -132,7 +132,7 @@ manifest:
           compare-by-default: true
     - name: mcuboot
       repo-path: sdk-mcuboot
-      revision: td_fork_ncs-v3.2.2_3e3292afdc
+      revision: td_fork_ncs-v3.2.2_cf8081de64
       remote: td
       path: bootloader/mcuboot
     - name: qcbor
