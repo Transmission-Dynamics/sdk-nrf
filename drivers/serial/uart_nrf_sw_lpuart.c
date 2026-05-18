@@ -1153,9 +1153,9 @@ int uart_nrf_sw_lpuart_deinit(const struct device *dev)
 	/* Free req pin channel */
 	uint8_t ch = 0;
 	ret = nrfx_gpiote_channel_get(get_gpiote(cfg->req_pin), cfg->req_pin, &ch);
-	if (ret == NRFX_SUCCESS) {
+	if (ret == 0) {
 		ret = nrfx_gpiote_channel_free(get_gpiote(cfg->req_pin), ch);
-		if (ret != NRFX_SUCCESS) {
+		if (ret != 0) {
 			LOG_ERR("Failed to free req pin channel:%08x", ret);
 			return ret;
 		}
@@ -1166,19 +1166,19 @@ int uart_nrf_sw_lpuart_deinit(const struct device *dev)
 	   We can’t reliably check allocation via pin lookup because the driver may
 	   unbind the pin→channel mapping (e.g., in idle), so use the stored ID. */
 	ret = nrfx_gpiote_channel_free(get_gpiote(cfg->rdy_pin), data->rdy_ch);
-	if (ret != NRFX_SUCCESS) {
+	if (ret != 0) {
 		LOG_ERR("Failed to free rdy pin channel:%08x", ret);
 		return ret;
 	}
 
 	ret = nrfx_gpiote_pin_uninit(get_gpiote(cfg->rdy_pin), cfg->rdy_pin);
-	if (ret != NRFX_SUCCESS) {
+	if (ret != 0) {
 		LOG_ERR("Failed to uninit rdy pin:%08x", ret);
 		return ret;
 	}
 
 	ret = nrfx_gpiote_pin_uninit(get_gpiote(cfg->req_pin), cfg->req_pin);
-	if (ret != NRFX_SUCCESS) {
+	if (ret != 0) {
 		LOG_ERR("Failed to uninit req pin:%08x", ret);
 		return ret;
 	}
